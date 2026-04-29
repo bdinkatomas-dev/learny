@@ -2,54 +2,85 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>Moje HF GUI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hugging Face GUI</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        #chat-box { width: 400px; height: 300px; border: 1px solid #ccc; overflow-y: auto; padding: 10px; margin-bottom: 10px; }
-        .user { color: blue; }
-        .ai { color: green; font-weight: bold; }
-        input { width: 320px; padding: 5px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; display: flex; flex-direction: column; align-items: center; padding: 40px; }
+        #chat-window { width: 100%; max-width: 600px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 20px; }
+        #output { height: 300px; overflow-y: auto; border-bottom: 2px solid #eee; margin-bottom: 20px; padding: 10px; }
+        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; }
+        .user { background: #e3f2fd; align-self: flex-end; color: #1565c0; }
+        .ai { background: #f1f8e9; color: #2e7d32; }
+        .controls { display: flex; gap: 10px; width: 100%; max-width: 600px; }
+        input { flex-grow: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+        button { padding: 12px 20px; background: #5c6bc0; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #3f51b5; }
+        button:disabled { background: #ccc; }
     </style>
 </head>
 <body>
 
-    <h2>Moje AI Rozhraní</h2>
-    <div id="chat-box"></div>
-    <div>
-        <input type="text" id="user-input" placeholder="Napiš něco...">
-        <button onclick="askAI()">Odeslat</button>
+    <div id="chat-window">
+        <div id="output">
+            <div class="msg ai">Ahoj! Napiš něco a já to doplním pomocí modelu GPT-2.</div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <input type="text" id="userInput" placeholder="Zadejte text...">
+        <button id="sendBtn">Odeslat</button>
     </div>
 
-    <script>
-        async function askAI() {
-            const input = document.getElementById('user-input');
-            const chatBox = document.getElementById('chat-box');
-            const prompt = input.value;
-            if(!prompt) return;
+    <script type="module">
+        // Import oficiální HF knihovny z CDN
+        import { HfInference } from 'https://jsdelivr.net';
 
-            chatBox.innerHTML += `<p class="user"><b>Vy:</b> ${prompt}</p>`;
+        // --- NASTAVENÍ ---
+        const HF_TOKEN = "SEM_VLOŽTE_VÁŠ_TOKEN"; // Najdete na: https://huggingface.co
+        const hf = new HfInference(HF_TOKEN);
+
+        const output = document.getElementById('output');
+        const input = document.getElementById('userInput');
+        const btn = document.getElementById('sendBtn');
+
+        async function generateText() {
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            // UI update
+            btn.disabled = true;
             input.value = '';
-
-            // --- Hugging Face API Volání ---
-            const API_TOKEN = "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"; // Získáte na huggingface.co/settings/tokens
-            const MODEL_ID = "gpt2"; // Můžete změnit na jakýkoliv jiný model
+            output.innerHTML += `<div class="msg user"><b>Vy:</b> ${prompt}</div>`;
+            const aiMsgDiv = document.createElement('div');
+            aiMsgDiv.className = 'msg ai';
+            aiMsgDiv.innerHTML = '<b>AI:</b> Zamýšlím se...';
+            output.appendChild(aiMsgDiv);
+            output.scrollTop = output.scrollHeight;
 
             try {
-                const response = await fetch(`https://huggingface.co{MODEL_ID}`, {
-                    headers: { Authorization: `Bearer ${API_TOKEN}` },
-                    method: "POST",
-                    body: JSON.stringify({ inputs: prompt }),
+                // Volání modelu
+                const response = await hf.textGeneration({
+                    model: 'gpt2',
+                    inputs: prompt,
+                    parameters: {
+                        max_new_tokens: 50,
+                        return_full_text: false
+                    }
                 });
-                
-                const result = await response.json();
-                const aiText = result[0].generated_text || "Chyba odpovědi";
-                
-                chatBox.innerHTML += `<p class="ai"><b>AI:</b> ${aiText}</p>`;
+
+                aiMsgDiv.innerHTML = `<b>AI:</b> ${response.generated_text}`;
             } catch (error) {
-                chatBox.innerHTML += `<p style="color:red">Chyba: ${error.message}</p>`;
+                console.error(error);
+                aiMsgDiv.style.color = 'red';
+                aiMsgDiv.innerHTML = `<b>Chyba:</b> ${error.message}. <br><small>Zkontrolujte token v kódu nebo zda model není přetížen.</small>`;
+            } finally {
+                btn.disabled = false;
+                output.scrollTop = output.scrollHeight;
             }
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
+
+        btn.addEventListener('click', generateText);
+        input.addEventListener('keypress', (e) => { if(e.key === 'Enter') generateText(); });
     </script>
 </body>
 </html>
