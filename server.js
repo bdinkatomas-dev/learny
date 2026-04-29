@@ -4,7 +4,7 @@ const app = express();
 
 app.use(express.json());
 
-const API_KEY = "SEM_DEJ_SVŮJ_HF_KEY";
+const API_KEY = "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";
 
 app.post("/api", async (req, res) => {
   const userText = req.body.text;
