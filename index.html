@@ -5,29 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Studijní AI</title>
     <style>
-        body { font-family: sans-serif; background: #f4f4f9; display: flex; justify-content: center; padding: 20px; }
-        .card { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        #output { height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px; white-space: pre-wrap; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        h2 { color: #1a73e8; margin-top: 0; }
+        #output { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 10px; background: #fafafa; line-height: 1.5; }
         .input-area { display: flex; gap: 10px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; outline: none; }
+        input:focus { border-color: #1a73e8; }
+        button { padding: 12px 20px; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         button:disabled { background: #ccc; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3>Studijní AI Pomocník</h3>
-    <div id="output">Ahoj! Zeptej se na cokoliv...</div>
+    <h2>Studijní Pomocník</h2>
+    <div id="output">Zde se objeví odpověď AI...</div>
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Napiš otázku...">
+        <input type="text" id="userInput" placeholder="Zadej otázku...">
         <button id="sendBtn">Odeslat</button>
     </div>
 </div>
 
 <script>
-    // 1. VLOŽ SVŮJ KLÍČ SEM
-    const API_KEY = "AIzaSyA5QzF-P4ApmCyHtePJBUT47_y3q7fUUHo"; 
+    // 1. VLOŽ SVŮJ KLÍČ MEZI UVOPOVKY
+    const MOJE_API_KEY = "AIzaSyA5QzF-P4ApmCyHtePJBUT47_y3q7fUUHo"; 
 
     const btn = document.getElementById('sendBtn');
     const input = document.getElementById('userInput');
@@ -37,39 +39,52 @@
         const prompt = input.value.trim();
         if (!prompt) return;
 
-        // UI: Příprava
+        // Reset UI
         btn.disabled = true;
-        output.innerText = "Přemýšlím...\n";
+        output.innerText = "Přemýšlím...";
         
         try {
-            // Používáme přímé volání bez externích knihoven (vyhne se MIME chybě)
-            const response = await fetch(`https://googleapis.com{API_KEY}`, {
+            // URL poskládaná tak, aby se předešlo chybám v uvozovkách
+            const url = "https://googleapis.com" + MOJE_API_KEY;
+
+            const response = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: "Jsi studijní asistent. Odpovídej česky k věci. Otázka: " + prompt }] }]
+                    contents: [{
+                        parts: [{ text: "Jsi studijní asistent. Odpovídej česky. Otázka: " + prompt }]
+                    }]
                 })
             });
 
             const data = await response.json();
 
             if (data.error) {
-                output.innerText = "Chyba: " + data.error.message;
+                output.innerText = "Chyba API: " + data.error.message;
+            } else if (data.candidates && data.candidates[0].content.parts[0].text) {
+                output.innerText = data.candidates[0].content.parts[0].text;
             } else {
-                // Vytažení textu z odpovědi Gemini
-                const aiText = data.candidates[0].content.parts[0].text;
-                output.innerText = aiText;
+                output.innerText = "AI vrátila prázdnou odpověď.";
             }
+
         } catch (err) {
-            output.innerText = "Chyba připojení. Zkontroluj konzoli (F12).";
-            console.error(err);
+            output.innerText = "Chyba sítě (Failed to fetch). Zkontroluj připojení a platnost API klíče.";
+            console.error("Detail chyby:", err);
         } finally {
             btn.disabled = false;
+            input.value = "";
         }
     }
 
+    // Spuštění kliknutím
     btn.onclick = askAI;
-    input.onkeypress = (e) => { if(e.key === 'Enter') askAI(); };
+
+    // Spuštění Enterem
+    input.onkeypress = function(e) {
+        if (e.key === 'Enter') {
+            askAI();
+        }
+    };
 </script>
 
 </body>
