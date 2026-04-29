@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Learny Ultra-Fast</title>
+    <title>Learny - Ultra Fast AI</title>
     <style>
         :root { 
             --bg: #000; --card: #171717; --border: #2d2d2d; 
@@ -60,7 +60,7 @@
         <div id="home-screen">
             <div class="card" style="background: linear-gradient(135deg, #171717 0%, #1e1e2e 100%);">
                 <h2>Ahoj! 👋</h2>
-                <p>Tvoje ultra-rychlá AI je připravena.</p>
+                <p>Tvoje ultra-rychlá AI přes Groq LPU je ready.</p>
                 <div class="stats-grid">
                     <div class="stat-box"><b style="color:var(--blue)">0</b><br><small>Lekcí</small></div>
                     <div class="stat-box"><b style="color:var(--blue)">1</b><br><small>Streak</small></div>
@@ -79,14 +79,14 @@
             </div>
         </div>
 
-        <!-- ÚČET -->
+        <!-- ÚČET (Coming Soon) -->
         <div id="account-screen" class="hidden">
-            <div class="card" style="text-align:center; padding: 40px 10px;">
-                <span style="font-size: 3rem;">⚙️</span>
-                <h2>Nastavení</h2>
-                <p>Uživatelské účty: <b>Coming Soon</b></p>
+            <div class="card" style="text-align: center; padding: 40px 10px;">
+                <span style="font-size: 3rem;">👤</span>
+                <h2>Účet</h2>
+                <p>Cloudové účty: <b>Coming Soon</b></p>
                 <div style="height: 1px; background: var(--border); margin: 20px 0;"></div>
-                <p style="font-size: 0.8rem; color: var(--sub);">Verze 1.0.0 | Groq LPU Engine</p>
+                <p style="font-size: 0.8rem; color: var(--sub);">Verze 1.0.0 | Groq Engine</p>
             </div>
         </div>
     </main>
@@ -99,8 +99,10 @@
 </div>
 
 <script>
+    // --- KONFIGURACE ---
     const GROQ_KEY = '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';
 
+    // NAVIGACE
     function navigate(screen) {
         ['home', 'ai', 'account'].forEach(s => {
             document.getElementById(s + '-screen').classList.add('hidden');
@@ -110,6 +112,7 @@
         document.getElementById('nav-' + screen).classList.add('active');
     }
 
+    // AI FUNKCE (Groq přes Proxy)
     async function askAI() {
         const input = document.getElementById('ai-input').value;
         const resDiv = document.getElementById('ai-res');
@@ -122,7 +125,8 @@
         resDiv.innerText = "Generuji...";
 
         try {
-            const response = await fetch("https://groq.com", {
+            // Používáme Proxy, abychom obešli CORS blokaci v prohlížeči
+            const response = await fetch("https://corsproxy.io", {
                 method: "POST",
                 headers: { 
                     "Authorization": `Bearer ${GROQ_KEY}`, 
@@ -131,7 +135,7 @@
                 body: JSON.stringify({ 
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        { role: "system", content: "Jsi přátelský učitel v aplikaci Learny. Odpovídej stručně, jasně a v češtině." },
+                        { role: "system", content: "Jsi přátelský učitel Learny. Odpovídej stručně, jasně a v češtině." },
                         { role: "user", content: input }
                     ],
                     temperature: 0.7
@@ -139,13 +143,15 @@
             });
 
             const data = await response.json();
+            
             if (data.choices && data.choices[0]) {
                 resDiv.innerText = data.choices[0].message.content.trim();
             } else {
-                resDiv.innerText = "Chyba API: " + (data.error?.message || "Neznámý problém");
+                resDiv.innerText = "Chyba API. Zkontroluj svůj Groq klíč.";
             }
         } catch (e) {
-            resDiv.innerText = "Chyba sítě. Ujisti se, že běžíš na hostingu (Vercel).";
+            resDiv.innerText = "Chyba sítě. Zkus to znovu za chvíli.";
+            console.error(e);
         } finally {
             btn.innerText = "Okamžitá odpověď";
             btn.disabled = false;
@@ -156,3 +162,4 @@
 </script>
 </body>
 </html>
+
