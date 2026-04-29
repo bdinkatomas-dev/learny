@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>AI Chat</title>
+</head>
+<body>
+
+<h2>🤖 AI Chat</h2>
+
+<input id="text" placeholder="Napiš zprávu..." />
+<button onclick="send()">Odeslat</button>
+
+<p id="out"></p>
+
+<script>
+async function send() {
+  const text = document.getElementById("text").value;
+
+  document.getElementById("out").innerText = "Načítám...";
+
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ text })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("out").innerText = data.result;
+}
+</script>
+
+</body>
+</html>
