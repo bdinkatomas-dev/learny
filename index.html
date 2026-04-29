@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Basic Gemini AI</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 50px auto; }
+        #output { background: #f0f0f0; padding: 15px; min-height: 50px; margin-top: 10px; border-radius: 8px; }
+        input { width: 80%; padding: 10px; }
+        button { padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h3>Studijní pomocník (Gemini)</h3>
+    <input type="text" id="userInput" placeholder="Zadej otázku...">
+    <button id="sendBtn">Odeslat</button>
+    <div id="output">Zde se objeví odpověď...</div>
+
+    <!-- Import Gemini SDK -->
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run";
+
+        // --- ZDE VLOŽ SVŮJ KLÍČ ---
+        const API_KEY = "AIzaSyA5QzF-P4ApmCyHtePJBUT47_y3q7fUUHo";
+        const genAI = new GoogleGenerativeAI(API_KEY);
+
+        const btn = document.getElementById('sendBtn');
+        const input = document.getElementById('userInput');
+        const output = document.getElementById('output');
+
+        btn.onclick = async () => {
+            const prompt = input.value;
+            if (!prompt) return;
+
+            output.innerText = "Přemýšlím...";
+            
+            try {
+                // Model 'gemini-1.5-flash' je nejrychlejší a zdarma
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                
+                output.innerText = response.text();
+            } catch (err) {
+                output.innerText = "Chyba: " + err.message;
+            }
+        };
+    </script>
+</body>
+</html>
