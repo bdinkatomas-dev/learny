@@ -1,27 +1,40 @@
-async function askAI() {
-  const text = document.getElementById("input").value;
+export default async function handler(req, res) {
+  const text = req.body.text;
 
-  const res = await fetch("/api/ai", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  });
+  const models = [
+    "mistralai/Mistral-7B-Instruct",
+    "google/flan-t5-large"
+  ];
 
-  const data = await res.json();
+  for (let model of models) {
+    try {
+      const response = await fetch(
+        `https://api-inference.huggingface.co/models/${model}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer TVŮJ_HF_KEY",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            inputs: text
+          })
+        }
+      );
 
-  console.log("AI RAW:", data);
+      const data = await response.json();
 
-  let output = "Žádná odpověď";
+      // pokud HF vrátí error → zkus další model
+      if (!data?.error) {
+        return res.status(200).json(data);
+      }
 
-  if (Array.isArray(data) && data[0]?.generated_text) {
-    output = data[0].generated_text;
-  } 
-  else if (data?.generated_text) {
-    output = data.generated_text;
-  } 
-  else if (data?.error) {
-    output = "Error: " + data.error;
+    } catch (e) {
+      console.log("Model failed:", model);
+    }
   }
 
-  document.getElementById("out").innerText = output;
+  res.status(500).json({
+    error: "All AI models failed"
+  });
 }
