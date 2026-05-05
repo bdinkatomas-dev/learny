@@ -1,160 +1,23 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Learny AI</title>
-
-<script src="https://js.puter.com/v2/"></script>
-
-<style>
-body {
-    margin:0;
-    font-family: Arial;
-    background:#0b0b0b;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
-
-.app {
-    width:100%;
-    max-width:420px;
-    padding:20px;
-}
-
-.card {
-    background:#171717;
-    border:1px solid #2d2d2d;
-    border-radius:20px;
-    padding:20px;
-}
-
-textarea {
-    width:100%;
-    height:80px;
-    border-radius:12px;
-    border:none;
-    padding:10px;
-    margin-top:10px;
-    background:#111;
-    color:white;
-}
-
-button {
-    width:100%;
-    padding:12px;
-    margin-top:10px;
-    border:none;
-    border-radius:100px;
-    background:#8ab4f8;
-    color:black;
-    font-weight:bold;
-    cursor:pointer;
-}
-
-#output {
-    margin-top:15px;
-    background:#111;
-    padding:10px;
-    border-radius:12px;
-    min-height:50px;
-}
-
-.stats {
-    margin-top:10px;
-    color:#aaa;
-    font-size:14px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="app">
-<div class="card">
-
-<h2>🤖 Learny AI</h2>
-
-<textarea id="input" placeholder="Zeptej se..."></textarea>
-
+<input id="input" placeholder="Zeptej se AI">
 <button onclick="askAI()">Odeslat</button>
 
-<div class="stats">
-Tokeny: <span id="tokens"></span> | Cooldown: <span id="cd"></span>s
-</div>
-
-<div id="output"></div>
-
-</div>
-</div>
+<p id="out"></p>
 
 <script>
-// 🔥 základní nastavení
-let tokens = localStorage.getItem("tokens") || 5;
-let lastTime = localStorage.getItem("lastTime") || 0;
-
-tokens = parseInt(tokens);
-lastTime = parseInt(lastTime);
-
-// ⏱ cooldown v sekundách
-const COOLDOWN = 10;
-
-// 🔄 UI update
-function updateUI() {
-    document.getElementById("tokens").innerText = tokens;
-    const now = Date.now();
-    const left = Math.max(0, COOLDOWN - Math.floor((now - lastTime)/1000));
-    document.getElementById("cd").innerText = left;
-}
-
-// 🔁 každou sekundu update
-setInterval(updateUI, 1000);
-
-// 🤖 AI funkce
 async function askAI() {
-    const input = document.getElementById("input").value;
-    const out = document.getElementById("output");
+  const text = document.getElementById("input").value;
 
-    const now = Date.now();
-    const diff = (now - lastTime)/1000;
+  const res = await fetch("/api/ai", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ text })
+  });
 
-    // cooldown check
-    if (diff < COOLDOWN) {
-        out.innerText = "⏳ Počkej " + Math.ceil(COOLDOWN - diff) + "s";
-        return;
-    }
+  const data = await res.json();
 
-    // token check
-    if (tokens <= 0) {
-        out.innerText = "❌ Došly ti tokeny";
-        return;
-    }
-
-    // odečti token
-    tokens--;
-    lastTime = now;
-
-    localStorage.setItem("tokens", tokens);
-    localStorage.setItem("lastTime", lastTime);
-
-    out.innerText = "⏳ Přemýšlím...";
-
-    try {
-        const res = await puter.ai.chat(input);
-        out.innerText = res;
-    } catch(e) {
-        out.innerText = "❌ AI error";
-    }
-
-    updateUI();
+  document.getElementById("out").innerText =
+    data?.[0]?.generated_text || "Žádná odpověď";
 }
-
-// první update
-updateUI();
 </script>
-
-</body>
-</html>
