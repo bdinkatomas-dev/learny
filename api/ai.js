@@ -3,7 +3,7 @@ export default async function handler(req, res) {
 
   const models = [
     "mistralai/Mistral-7B-Instruct",
-    "google/flan-t5-large"
+    "google/flan-t5-base"
   ];
 
   for (let model of models) {
