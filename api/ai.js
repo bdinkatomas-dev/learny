@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         {
           method: "POST",
           headers: {
-            Authorization: "Bearer TVŮJ_HF_KEY",
+            Authorization: "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",
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
