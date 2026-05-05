@@ -1,23 +1,27 @@
-export default async function handler(req, res) {
-  try {
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct",
-      {
-        method: "POST",
-        headers: {
-          Authorization: "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",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          inputs: req.body.text
-        })
-      }
-    );
+async function askAI() {
+  const text = document.getElementById("input").value;
 
-    const data = await response.json();
+  const res = await fetch("/api/ai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
 
-    res.status(200).json(data);
-  } catch (err) {
-    res.status(500).json({ error: "AI error" });
+  const data = await res.json();
+
+  console.log("AI RAW:", data);
+
+  let output = "Žádná odpověď";
+
+  if (Array.isArray(data) && data[0]?.generated_text) {
+    output = data[0].generated_text;
+  } 
+  else if (data?.generated_text) {
+    output = data.generated_text;
+  } 
+  else if (data?.error) {
+    output = "Error: " + data.error;
   }
+
+  document.getElementById("out").innerText = output;
 }
