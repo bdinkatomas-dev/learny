@@ -1,27 +1,132 @@
-async function askAI() {
-  const text = document.getElementById("input").value;
-  const out = document.getElementById("out");
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learny AI</title>
 
-  out.innerText = "⏳ Přemýšlím...";
-
-  try {
-    const res = await fetch("/api/ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text })
-    });
-
-    const data = await res.json();
-
-    console.log("RAW:", data);
-
-    let answer =
-      data?.[0]?.generated_text ||
-      data?.generated_text ||
-      JSON.stringify(data);
-
-    out.innerText = answer;
-  } catch (e) {
-    out.innerText = "❌ AI dočasně nedostupná";
-  }
+<style>
+body {
+    margin:0;
+    font-family: Arial;
+    background:#0b0b0b;
+    color:white;
+    display:flex;
+    justify-content:center;
 }
+
+.app {
+    width:100%;
+    max-width:500px;
+    padding:20px;
+}
+
+.header {
+    text-align:center;
+    font-size:24px;
+    margin-bottom:20px;
+}
+
+.card {
+    background:#171717;
+    border:1px solid #2d2d2d;
+    border-radius:20px;
+    padding:20px;
+}
+
+textarea {
+    width:100%;
+    height:100px;
+    border-radius:12px;
+    border:none;
+    padding:10px;
+    margin-top:10px;
+    background:#111;
+    color:white;
+    resize:none;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:100px;
+    background:#8ab4f8;
+    color:black;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:active {
+    transform:scale(0.98);
+}
+
+#out {
+    margin-top:15px;
+    background:#111;
+    padding:12px;
+    border-radius:12px;
+    min-height:60px;
+    white-space:pre-wrap;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="header">🤖 Learny AI</div>
+
+<div class="card">
+
+<h3>Zeptej se AI</h3>
+
+<textarea id="input" placeholder="Např. Co je fotosyntéza?"></textarea>
+
+<button onclick="askAI()">Odeslat</button>
+
+<div id="out">Odpověď se zobrazí zde...</div>
+
+</div>
+
+</div>
+
+<script>
+async function askAI() {
+    const text = document.getElementById("input").value;
+    const out = document.getElementById("out");
+
+    if (!text) return;
+
+    out.innerText = "⏳ Přemýšlím...";
+
+    try {
+        const res = await fetch("/api/ai", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ text })
+        });
+
+        const data = await res.json();
+
+        console.log("AI response:", data);
+
+        let answer =
+            data?.[0]?.generated_text ||
+            data?.generated_text ||
+            JSON.stringify(data);
+
+        out.innerText = answer;
+
+    } catch (e) {
+        out.innerText = "❌ AI dočasně nedostupná";
+    }
+}
+</script>
+
+</body>
+</html>
