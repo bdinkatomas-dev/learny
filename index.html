@@ -1,23 +1,27 @@
-<input id="input" placeholder="Zeptej se AI">
-<button onclick="askAI()">Odeslat</button>
-
-<p id="out"></p>
-
-<script>
 async function askAI() {
   const text = document.getElementById("input").value;
+  const out = document.getElementById("out");
 
-  const res = await fetch("/api/ai", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ text })
-  });
+  out.innerText = "⏳ Přemýšlím...";
 
-  const data = await res.json();
+  try {
+    const res = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
 
-  document.getElementById("out").innerText =
-    data?.[0]?.generated_text || "Žádná odpověď";
+    const data = await res.json();
+
+    console.log("RAW:", data);
+
+    let answer =
+      data?.[0]?.generated_text ||
+      data?.generated_text ||
+      JSON.stringify(data);
+
+    out.innerText = answer;
+  } catch (e) {
+    out.innerText = "❌ AI dočasně nedostupná";
+  }
 }
-</script>
